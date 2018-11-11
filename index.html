@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style type="text/css">
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			
+			#wrap {
+				width: 800px;
+				margin: 50px auto;
+			}
+			
+			#box1,
+			#box2 {
+				width: 800px;
+				padding: 10px;
+				background-color: yellow;
+			}
+			
+			table {
+				width: 800px;
+				border-collapse: collapse;
+			}
+			
+			table,
+			th,
+			td,
+			tr {
+				border: solid 1px;
+			}
+			
+			.del {
+				text-align: center;
+			}
+			
+			a {
+				margin-left: 12px;
+				cursor: pointer;
+			}
+			
+			tbody:nth-child(even) {
+				background-color: red;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="wrap">
+			<div id="box1">
+				<input type="text" id="name" placeholder="姓名" />
+				<input type="text" id="age" placeholder="年龄" />
+				<input type="text" id="sex" placeholder="性别" />
+				<input type="text" id="hobby" placeholder="爱好" />
+				<button id="btn">添加</button>
+				<button id="btn1">修改</button>
+			</div>
+			<div id="box2">
+				<table>
+					<tr>
+						<th>姓名</th>
+						<th>年龄</th>
+						<th>性别</th>
+						<th>爱好</th>
+						<th>操作</th>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</body>
+	<script src="js/jquery-2.2.4.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript">
+		var btn = document.querySelector("#btn");
+		var btn1 = document.querySelector("#btn1");
+		var cname = document.querySelector("#name");
+		var cage = document.querySelector("#age");
+		var csex = document.querySelector("#sex");
+		var chobby = document.querySelector("#hobby");
+		//	点击添加
+		btn.onclick = function() {
+			var name = cname.value;
+			var age = cage.value;
+			var sex = csex.value;
+			var hobby = chobby.value;
+			if(name && age && sex && hobby) {
+				get(name, age, sex, hobby);
+			} else {
+				alert("内容不能为空")
+			}
+		}
+		//	添加
+		get();
+
+		function get(name, age, sex, hobby) {
+			//判断是否有输入值执行不同的路径
+			if(name && age && sex && hobby) {
+				//有输入值时提交到后台并获取
+				var my = "http://127.0.0.1:81/add?name=" + name + "&age=" +
+					age + "&sex=" + sex + " &hobby=" + hobby;
+			} else {
+				//无输入值时执行获取后台
+				var my = "http://127.0.0.1:81/get"
+			}
+			var xhr;
+			window.XMLHttpRequest ? xhr = new XMLHttpRequest() : xhr = new ActiveXObject("Microsoft-XMLHTTP");
+			xhr.open("get", my, true);
+			xhr.send();
+			xhr.onreadystatechange = function() {
+				if(xhr.readyState == 4 && xhr.status == 200) {
+					var obj = JSON.parse(xhr.responseText);
+					console.log(obj);
+					show(obj);
+				}
+			}
+		}
+		//		展示
+		function show(obj) {
+			var tab = document.querySelector("table");
+			//清空table
+			tab.innerHTML = "<tr><th>姓名</th><th>年龄</th><th>性别</th><th>爱好</th><th>操作</th></tr>";
+			for(var i in obj) {
+				//添加table内容
+				var str = `<tr>
+						<td>` + obj[i].name + `</td>
+						<td>` + obj[i].age + `</td>
+						<td>` + obj[i].sex + `</td>
+						<td>` + obj[i].hobby + `</td>
+						<td class="del"><a onclick="del(` + obj[i].id + `)">删除</a><a onclick="pt(` + obj[i].id + `)">修改</a></td>
+					</tr>`;
+				tab.innerHTML += str;
+			}
+		}
+		//		删除
+		function del(id) {
+			var xhr;
+			var my = "http://127.0.0.1:81/del?id=" + id;
+			window.XMLHttpRequest ? xhr = new XMLHttpRequest() : xhr = new ActiveXObject("Microsoft-XMLHTTP");
+			xhr.open("get", my, true);
+			xhr.send();
+			xhr.onreadystatechange = function() {
+				if(xhr.readyState == 4 && xhr.status == 200) {
+					var obj = JSON.parse(xhr.responseText);
+					console.log(obj);
+					show(obj);
+				}
+			}
+		}
+		//全局变量接收id
+		var d = "";
+		//		修改
+		function pt(id) {
+			var xhr;
+			d = id;
+			var my = "http://127.0.0.1:81/pt?id=" + id;
+			window.XMLHttpRequest ? xhr = new XMLHttpRequest() : xhr = new ActiveXObject("Microsoft-XMLHTTP");
+			xhr.open("get", my, true);
+			xhr.send();
+			xhr.onreadystatechange = function() {
+				if(xhr.readyState == 4 && xhr.status == 200) {
+					var obj = JSON.parse(xhr.responseText);
+					console.log(obj);
+					fn(obj);
+				}
+			}
+		}
+		//将要修改的值返回的输入框中
+		function fn(obj) {
+			cname.value = obj.name;
+			cage.value = obj.age;
+			csex.value = obj.sex;
+			chobby.value = obj.hobby;
+		}
+		//点击修改
+		btn1.onclick = function() {
+			var name = cname.value;
+			var age = cage.value;
+			var sex = csex.value;
+			var hobby = chobby.value;
+			console.log(d);
+			//调用修改函数
+			get1(d, name, age, sex, hobby);
+		}
+		//		添加
+		function get1(id, name, age, sex, hobby) {
+			var my = "http://127.0.0.1:81/p?id=" + id + "&name=" + name + "&age=" + age + "&sex=" + sex + "&hobby=" + hobby;
+			var xhr;
+			window.XMLHttpRequest ? xhr = new XMLHttpRequest() : xhr = new ActiveXObject("Microsoft-XMLHTTP");
+			xhr.open("get", my, true);
+			xhr.send();
+			xhr.onreadystatechange = function() {
+				if(xhr.readyState == 4 && xhr.status == 200) {
+					var obj = JSON.parse(xhr.responseText);
+					console.log(obj);
+					show(obj);
+				}
+			}
+		}
+		//		颜色
+		//变量记录颜色
+		var color = "";
+		$("table").on("mouseover", "tbody:not(tbody:first-child)", function() {
+			color = $(this).css("background-color");
+			$(this).css("background-color", "palevioletred")
+		}).on("mouseout", "tbody:not(tbody:first-child)", function() {
+			$(this).css("background-color", color)
+		})
+	</script>
+
+</html>
